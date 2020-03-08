@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New User Page</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+</head>
+<body>
+<h2>Create new user</h2>
+<form method="POST" action="/submit">
+    <div>
+        <input type="text" name="name" placeholder="Name">
+    </div>
+    <div>
+        <select name="car">
+            <script>
+                $.get('/getCars', function(res) {
+                    console.log(res);
+                    res.forEach((car)=>{
+                        $('<option value="' + car.Highway + '">' + car.Year+' '+car.Make+' '+car.Model+ '</option>').appendTo($('select[name="car"]'));
+                    });
+                });
+
+            </script>
+        </select>
+    </div>
+    <div>
+        <textarea name="description" placeholder="Description"></textarea>
+    </div>
+    <div>
+        <button type="submit">Submit</button>
+    </div>
+</form>
+
+</body>
+</html>
