@@ -12,19 +12,26 @@ app.enable('trust proxy');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
-const getVisits = () => {
-    const query = datastore
-        .createQuery('Car')
-        .order('TankCap', {descending: true})
-        .limit(10);
-
-    return datastore.runQuery(query);
-};
+app.get('/getGasStations',  async (req, res, next) => {
+    try {
+        const query = datastore
+            .createQuery('GasStation');
+        const [results] = await datastore.runQuery(query);
+        res.send(results);
+    } catch (error) {
+        next(error);
+    }
+});
 
 app.get('/getCars', async (req, res, next) => {
     try {
-        const [entities] = await getVisits();
-        res.send(entities);
+        const query = datastore
+            .createQuery('Car')
+            .order('TankCap', {descending: true})
+            .limit(10);
+        const [results] = await datastore.runQuery(query);
+
+        res.send(results);
     } catch (error) {
         next(error);
     }
@@ -49,5 +56,5 @@ app.post('/submit', (req, res) => {
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-    console.log(`Server listening on port ${PORT}...`);
+    console.log(`Server started at http://localhost:8080/`);
 });

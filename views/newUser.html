@@ -15,7 +15,6 @@
         <select name="car">
             <script>
                 $.get('/getCars', function(res) {
-                    console.log(res);
                     res.forEach((car)=>{
                         $('<option value="' + car.Highway + '">' + car.Year+' '+car.Make+' '+car.Model+ '</option>').appendTo($('select[name="car"]'));
                     });
