@@ -48,7 +48,7 @@ controlText2.innerHTML = '<i class="fas fa-search-location"></i>';
 controlUI2.appendChild(controlText2);
 
 controlUI.addEventListener('click', function() {
-    alert("You clicked the settings button");
+    changeCar();
 });
 
 controlUI2.addEventListener('click', function() {
@@ -75,12 +75,19 @@ window.initMap = function() {
     directionsService = new google.maps.DirectionsService();
     directionsRenderer = new google.maps.DirectionsRenderer();
     infoWindow = new google.maps.InfoWindow({});
-    $.get('/getCars', function(res) {
-        car = res[0];
-        console.log("Setting car to ",car);
-    });
+    changeCar();
     plotGas();
 };
+
+function changeCar(){
+    $.get('/getCars', function(res) {
+        car = res[carIndex%res.length];
+        console.log("Setting car to ",car);
+        alert("Set car to the "+car.Year+" "+car.Make+" "+car.Model);
+        carIndex++;
+    });
+
+}
 
 function getDirections(){
     var location = prompt("Where do you want to get directions to?", "Las Vegas");
@@ -130,6 +137,7 @@ function getUserLocation() {
     }
 }
 var car = null;
+var carIndex=0;
 var markers = [];
 var gasIcon = {};
 function plotGas() {
@@ -164,7 +172,6 @@ function setMarkers(mArr, val){
 }
 
 function getDistance(a,b){
-    console.log(a,b);
     return Math.hypot(a.lat()-b.lat(),a.lng()-b.lng());
 }
 
@@ -174,7 +181,7 @@ function inRangeOfPolyLine(point, line, range){
 
 function getGasStationsForRoute(line, direction){
         var nearbyGas = markers.filter(marker=>{
-            return inRangeOfPolyLine(marker.position, line, .1)
+            return inRangeOfPolyLine(marker.position, line, .02)
         });
         if(car!=null){
             var range = car.Highway*car.TankCap;
@@ -195,11 +202,24 @@ function getGasStationsForRoute(line, direction){
                     travelMode: 'DRIVING',
 
                 }, (res) => {
-                    console.log(res);
-                    var distances = res.rows.map((row, ri)=>{return row.elements.map((el, ci)=>{return {distance: el.distance.value,from:ri,to:ci}});}).flat().filter((x)=>{return x.to>x.from});
+                    var distances = res.rows.map((row, ri)=>{return row.elements.map((el, ci)=>{return {distance: el.distance.value/1609,from:ri,to:ci}});}).flat().filter((x)=>{return x.to>x.from});
                     distances.sort((a,b)=>{return a.distance-b.distance;}).sort((a, b) => a.from-b.from);
+                    console.log(distances);
                     //Now have array of distances from various points sorted, do math to check range against the distances in these
-
+                    var i=0;
+                    var gasStations = [];
+                    while (i<places.length-1){
+                        var tmp = distances.filter((a)=>a.from==i&&a.distance<range);
+                        tmp.sort(((a, b) => nearbyGas[a.to-1].RegularPrice-nearbyGas[b.to-1].RegularPrice));
+                        if(tmp.length==0){
+                            alert("We are sorry, but your car would not be able to make it to the next gas station.");
+                            return;
+                        }
+                        i = tmp[0].to;
+                        gasStations.push(nearbyGas[i-1]);
+                    }
+                    console.log(nearbyGas);
+                    nearbyGas = gasStations;
                 });
             }
         }
@@ -207,7 +227,6 @@ function getGasStationsForRoute(line, direction){
         nearbyGas.sort((a,b)=>{return a.data.RegularPrice-b.data.RegularPrice});
         nearbyGas.forEach((gas,index)=>{
             var tmp = {url: 'gasPump.png',scaledSize:new google.maps.Size(40/(1+index/nearbyGas.length),46/(1+index/nearbyGas.length))};
-            console.log(index);
             gas.setIcon(tmp);
         })
 }
