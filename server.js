@@ -46,12 +46,8 @@ app.get('/newUser', (req, res) => {
 });
 
 app.post('/submit', (req, res) => {
-    console.log("New user: "+{
-        name: req.body.name,
-        mpg: req.body.mpg,
-        description: req.body.description
-    });
-    res.send('Thanks for adding '+req.body.name+'!');
+    console.log("New user: "+{req});
+    res.send('Thanks for adding '+req.car+'!');
 });
 
 const PORT = process.env.PORT || 8080;
